@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { animateScroll as scroll } from 'react-scroll';
@@ -8,83 +8,70 @@ import ImageFindEmpty from 'assets/empty-collection-min.png';
 import ImageFindError from 'assets/something-wrong1-min.png';
 import { Wrapper } from './App.styled';
 
-export class App extends Component {
-  state = {
-    query: '',
-    gallery: [],
-    status: 'idle',
-    page: 1,
-    error: null,
-    isVisible: false,
-  };
+export const App = () => {
+  const [gallery, setGallery] = useState([]);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState('idle');
+  const [error, setError] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
 
-  async componentDidUpdate(prevProps, prevState) {
-    const { query, page } = this.state;
+  useEffect(() => {
+    if (query === '') return;
 
-    if (prevState.query !== query || prevState.page !== page) {
-      this.setState({ status: 'pending' });
+    const fetchGallery = async () => {
+      setStatus('pending');
 
       try {
         const data = await getImages(query, page);
 
-        this.setState(prevState => ({
-          gallery: [...prevState.gallery, ...data.hits],
-          status: 'resolved',
-          isVisible: page < Math.ceil(data.totalHits / 12),
-        }));
+        setGallery(gallery => [...gallery, ...data.hits]);
+        setStatus('resolved');
+        setIsVisible(page < Math.ceil(data.totalHits / 12));
       } catch {
-        this.setState({
-          error:
-            'Oops, something went wrong. Please, reload the page to try again.',
-          status: 'rejected',
-        });
+        setError(
+          'Oops, something went wrong. Please, reload the page to try again.'
+        );
+        setStatus('rejected');
       }
-    }
-  }
+    };
+    fetchGallery();
+  }, [query, page]);
 
-  handleFormSubmit = name => {
-    if (this.state.query !== name) {
-      this.setState({
-        query: name,
-        page: 1,
-        gallery: [],
-      });
+  const handleFormSubmit = name => {
+    if (query !== name) {
+      setGallery([]);
+      setQuery(name);
+      setPage(1);
     }
   };
 
-  loadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
-    scroll.scrollMore(475);
+  const loadMore = () => {
+    setPage(page => page + 1);
+
+    scroll.scrollMore(490);
   };
 
-  render() {
-    const { gallery, status, error, isVisible } = this.state;
-    const { handleFormSubmit, loadMore } = this;
-    const isEmptyGallery = gallery.length === 0;
+  const isEmptyGallery = gallery.length === 0;
 
-    return (
-      <Wrapper>
-        <Searchbar onSubmit={handleFormSubmit} />
-        <ImageGallery items={gallery} />
+  return (
+    <Wrapper>
+      <Searchbar onSubmit={handleFormSubmit} />
+      <ImageGallery items={gallery} />
 
-        {status === 'pending' && <Loader />}
+      {status === 'pending' && <Loader />}
 
-        {!isEmptyGallery && isVisible && (
-          <Button loadMore={loadMore} status={status} />
-        )}
+      {!isEmptyGallery && isVisible && (
+        <Button loadMore={loadMore} status={status} />
+      )}
 
-        {isEmptyGallery && status === 'resolved' && (
-          <Message text="Nothing found" image={ImageFindEmpty} />
-        )}
+      {isEmptyGallery && status === 'resolved' && (
+        <Message text="Nothing found" image={ImageFindEmpty} />
+      )}
 
-        {status === 'rejected' && (
-          <Message text={error} image={ImageFindError} />
-        )}
+      {status === 'rejected' && <Message text={error} image={ImageFindError} />}
 
-        <ToastContainer autoClose={2200} theme="colored" />
-      </Wrapper>
-    );
-  }
-}
+      <ToastContainer autoClose={2200} theme="colored" />
+    </Wrapper>
+  );
+};

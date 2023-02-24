@@ -1,53 +1,43 @@
-import React, { Component } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { BsSearch } from 'react-icons/bs';
 import { StyledHeader } from './Searchbar.styled';
 
-export class Searchbar extends Component {
-  state = {
-    query: '',
+export const Searchbar = ({ onSubmit }) => {
+  const [query, setQuery] = useState('');
+
+  const handleQueryChange = e => {
+    setQuery(e.target.value.trim().toLowerCase());
   };
 
-  handleQueryChange = event => {
-    this.setState({
-      query: event.target.value.trim().toLowerCase(),
-    });
-  };
-
-  handleQuerySubmit = event => {
-    event.preventDefault();
-    const { query } = this.state;
+  const handleQuerySubmit = e => {
+    e.preventDefault();
 
     if (query === '') {
       return toast.error('Enter the name');
     }
 
-    this.props.onSubmit(query);
-    this.setState({ query: '' });
+    onSubmit(query);
+    setQuery('');
   };
 
-  render() {
-    const { handleQuerySubmit, handleQueryChange } = this;
-    const { query } = this.state;
+  return (
+    <StyledHeader>
+      <form onSubmit={handleQuerySubmit}>
+        <button type="submit">
+          <BsSearch size="20" />
+          <span>Search</span>
+        </button>
 
-    return (
-      <StyledHeader>
-        <form onSubmit={handleQuerySubmit}>
-          <button type="submit">
-            <BsSearch size="20" />
-            <span>Search</span>
-          </button>
-
-          <input
-            type="text"
-            value={query}
-            onChange={handleQueryChange}
-            autoComplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-          />
-        </form>
-      </StyledHeader>
-    );
-  }
-}
+        <input
+          type="text"
+          value={query}
+          onChange={handleQueryChange}
+          autoComplete="off"
+          autoFocus
+          placeholder="Search images and photos"
+        />
+      </form>
+    </StyledHeader>
+  );
+};
