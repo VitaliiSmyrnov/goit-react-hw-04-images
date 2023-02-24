@@ -18,8 +18,7 @@ export const Modal = ({ onClose = () => {}, children }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [onClose]);
 
   const handleBackDropClick = e => {
     if (e.currentTarget === e.target) {
